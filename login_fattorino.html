@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Fattorino</title>
+  <style>
+    :root{
+      --bg:#fafafa; --fg:#333;
+      --brand-dark:#004d40; --brand:#00796b; --brand-hover:#005f56;
+      --muted:#e0f2f1; --card:#fff; --border:#ddd; --badge:#f3f4f6;
+      --shadow:0 8px 24px rgba(0,0,0,.12); --radius:16px;
+      --ring: 0 0 0 3px rgba(0,121,107,.15);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--bg);color:var(--fg);}
+    .bg-pattern{position:fixed;inset:0;pointer-events:none;z-index:-1;background:
+      radial-gradient(1200px 600px at 80% -20%, rgba(0,121,107,.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(0,77,64,.07), transparent 60%),
+      linear-gradient(180deg, #ffffff 0%, #f6f8f9 100%);}
+    header.app{background:var(--brand-dark);color:#fff;padding:1rem;position:sticky;top:0;z-index:10}
+    header.app .wrap{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:1rem}
+    header.app h1{margin:0;font-size:1.15rem}
+    .actions{margin-left:auto;display:flex;gap:.5rem}
+    .badge{background:var(--badge);padding:.35rem .7rem;border-radius:999px;font-size:.85rem;color:#111}
+    .login-shell{min-height:calc(100vh - 72px);display:grid;place-items:center;padding:24px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);width:100%;max-width:520px;overflow:hidden}
+    .card-head{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--border)}
+    .logo{width:44px;height:44px;border-radius:12px;background:#fff;color:var(--brand-dark);display:grid;place-items:center;font-weight:800;border:1px solid #e6e6e6}
+    .title{margin:0;font-size:1.05rem}
+    .subtitle{margin:0;color:#e5f6f4;font-size:.9rem;opacity:.9}
+    .card-body{padding:22px}
+    .help{margin:0 0 14px;color:#64748b}
+    .field{margin-bottom:14px}
+    .field label{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:.88rem;margin-bottom:.45rem;color:#374151}
+    .right-hint{font-weight:500;color:#64748b;font-size:.8rem}
+    .input-wrap{position:relative}
+    .input-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.6}
+    .field input{width:100%;padding:.85rem .9rem .85rem 40px;border:1px solid #cbd5e1;border-radius:12px;font-size:1rem;transition:border .15s, box-shadow .15s}
+    .field input:focus{outline:none;border-color:var(--brand);box-shadow:var(--ring)}
+    .toggle-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;opacity:.7}
+    .err{display:none;margin-top:6px;font-size:.82rem;color:#b91c1c}
+    .field.invalid .err{display:block}
+    .field.invalid input{border-color:#ef4444}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:6px}
+    .btn{background:var(--brand);color:#fff;border:none;padding:.85rem 1rem;border-radius:14px;cursor:pointer;transition:transform .04s ease, background .2s;min-width:120px}
+    .btn:hover{background:var(--brand-hover)}
+    .btn:active{transform:translateY(1px)}
+    .btn.secondary{background:#fff;color:var(--brand-dark);border:1px solid #cbd5d6}
+    .btn[disabled]{opacity:.6;pointer-events:none}
+    .meta{display:flex;gap:8px;align-items:center;color:#64748b;font-size:.88rem}
+    code{background:#f3f4f6;border:1px solid #e5e7eb;padding:2px 6px;border-radius:8px}
+    .card-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;color:#64748b;font-size:.88rem}
+    #toast{position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;transform:translateY(8px);transition:.2s;z-index:100}
+    #toast.show{opacity:1;transform:none}
+  </style>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#00796b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body>
+  <div class="bg-pattern" aria-hidden="true"></div>
+  <header class="app">
+    <div class="wrap">
+      <div class="logo">R</div>
+      <div>
+        <h1 class="title">Accesso Fattorino</h1>
+        <p class="subtitle">Inserisci numero di telefono e PIN</p>
+      </div>
+      <div class="actions"><span class="badge">Versione Driver</span></div>
+    </div>
+  </header>
+  <main class="login-shell">
+    <section class="card" role="form" aria-labelledby="loginTitle">
+      <div class="card-head">
+        <div class="logo" aria-hidden="true">🛵</div>
+        <div>
+          <h2 id="loginTitle" class="title">Accedi</h2>
+          <p class="subtitle" style="margin:2px 0 0">Area dedicata ai fattorini</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <p class="help">Per motivi di sicurezza, il PIN non viene salvato sul dispositivo.</p>
+        <div class="field" id="f-phone">
+          <label for="phone">Telefono <span class="right-hint">solo cifre</span></label>
+          <div class="input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.2c1.2 2.4 3.1 4.3 5.5 5.5l2-2c.3-.3.8-.4 1.1-.2 1 .3 2 .5 3.1 .5.6 0 1 .4 1 .9v3.4c0 .6-.4 1-1 1C10.5 19.3 4.7 13.5 4.7 6.6c0-.6.4-1 .9-1H9c.5 0 .9 .4 .9 1 0 1.1 .2 2.1 .5 3.1 .1 .4 0 .8 -.3 1.1l-1.5 1.4z" fill="#64748b"/></svg>
+            <input id="phone" type="tel" placeholder="Es. 3331234567" autocomplete="tel" inputmode="numeric" aria-describedby="e-phone" />
+            <div class="err" id="e-phone">Inserisci un numero valido (9–12 cifre).</div>
+          </div>
+        </div>
+        <div class="field" id="f-pin">
+          <label for="pin">PIN <span class="right-hint">4–6 cifre</span></label>
+          <div class="input-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6h-1V9a5 5 0 10-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2v-6a2 2 0 00-2-2zm-8-2a3 3 0 116 0v2H10V9z" fill="#64748b"/></svg>
+            <input id="pin" type="password" placeholder="••••" inputmode="numeric" aria-describedby="e-pin" />
+            <button class="toggle-eye" type="button" aria-label="Mostra/Nascondi PIN" id="togglePin">👁️</button>
+            <div class="err" id="e-pin">PIN non valido. Usa 4–6 cifre.</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="meta">Demo: <code>3331234567</code> / <code>1234</code></div>
+          <button id="loginBtn" class="btn">Entra</button>
+        </div>
+      </div>
+      <div class="card-foot">
+        <span>Serve aiuto? Contatta il responsabile.</span>
+        <button class="btn secondary" id="helpBtn">Guida</button>
+      </div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  
+  <script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  // ⬇️ Metti le tue credenziali
+  const SUPABASE_URL = "https://svulhysmqimrkxlregyy.supabase.co"; // <- metti il tuo
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2dWxoeXNtcWltcmt4bHJlZ3l5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwNjYzNTUsImV4cCI6MjA3MTY0MjM1NX0.7AdMQITbKawLMLXUf2a4AnSGNNKB7lzel2fJ6-LzHYo";               // <- metti il tuo
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const SESSION_KEY='driverSession';
+  const toastEl = document.getElementById('toast');
+  const btn = document.getElementById('loginBtn');
+
+  const toast = (m)=>{ toastEl.textContent=m; toastEl.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>toastEl.classList.remove('show'),1800); };
+
+  function validPhone(v){ return /^\d{9,12}$/.test(v); }
+  function validPin(v){ return /^\d{4,6}$/.test(v); }
+  function setInvalid(id, flag){ const f = document.getElementById(id); if (!f) return; f.classList.toggle('invalid', !!flag); }
+  function busy(flag){ btn.disabled = !!flag; btn.textContent = flag ? 'Accesso…' : 'Entra'; }
+  function setSession(sess){ sessionStorage.setItem(SESSION_KEY, JSON.stringify(sess)); }
+
+  // 🔐 LOGIN CONTRO SUPABASE (OPZIONE 1: query diretta) -----------------------
+  async function loginWithQuery(phone, pin){
+    const { data, error } = await supabase
+      .from('couriers')
+      .select('id,name,phone')
+      .eq('phone', phone)
+      .eq('pin', pin)
+      .eq('active', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data; // null se non trovato
+  }
+
+  // 🔐 LOGIN CONTRO SUPABASE (OPZIONE 2: RPC consigliata) --------------------
+  // Se crei la funzione SQL "courier_login" (vedi sotto), usa questa al posto della query:
+  async function loginWithRPC(phone, pin){
+    const { data, error } = await supabase.rpc('courier_login', { _phone: phone, _pin: pin });
+    if (error) throw error;
+    // data può essere null o un oggetto {id,name,phone}
+    return data;
+  }
+
+  async function doLogin(){
+    const phone = document.getElementById('phone').value.trim();
+    const pin = document.getElementById('pin').value.trim();
+
+    const pOk = validPhone(phone);
+    const pinOk = validPin(pin);
+    setInvalid('f-phone', !pOk);
+    setInvalid('f-pin', !pinOk);
+    if (!pOk || !pinOk){ toast('Controlla i campi evidenziati'); return; }
+
+    busy(true);
+    try {
+      // SCEGLI QUALE FUNZIONE USARE:
+      // const hit = await loginWithRPC(phone, pin);     // ✅ consigliato (dopo aver creato la RPC)
+      const hit = await loginWithQuery(phone, pin);      // ⚠️ rapido (richiede policy SELECT per anon)
+
+      if (!hit){ busy(false); toast('Credenziali non valide'); return; }
+
+      setSession({ id: hit.id, name: hit.name, phone: hit.phone , pin });
+      window.location.href = 'fattorino_consegne.html';
+    } catch(err){
+      console.error(err);
+      toast('Errore accesso: ' + (err?.message || ''));
+      busy(false);
+    }
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  ['phone','pin'].forEach(id=> document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); }));
+  document.getElementById('togglePin').addEventListener('click', ()=>{ const input = document.getElementById('pin'); input.type = input.type === 'password' ? 'text' : 'password'; });
+
+  // (Facoltativo) bottone Guida invariato
+  document.getElementById('helpBtn').addEventListener('click', ()=>{ toast('Contatta il tuo responsabile per le credenziali di accesso.'); });
+</script>
+
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+      // iOS install hint (optional): nothing to do; iOS uses "Add to Home Screen".
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consegne – Fattorino</title>
+  <style>
+    :root{
+      --bg:#fafafa; --fg:#333;
+      --brand-dark:#004d40; --brand:#00796b; --brand-hover:#005f56;
+      --muted:#e0f2f1; --card:#fff; --border:#e5e7eb; --badge:#f3f4f6;
+      --shadow:0 8px 24px rgba(0,0,0,.12); --radius:14px; --ring:0 0 0 3px rgba(0,121,107,.15);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--bg);color:var(--fg);} 
+    a{color:var(--brand-dark);text-decoration:none}
+    header.app{background:var(--brand-dark);color:#fff;padding:1rem;position:sticky;top:0;z-index:20}
+    header.app .wrap{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:12px;background:#fff;color:var(--brand-dark);display:grid;place-items:center;font-weight:800;border:1px solid #e6e6e6}
+    .title{margin:0;font-size:1.15rem}
+    .subtitle{margin:2px 0 0;opacity:.9;font-size:.9rem;color:#e5f6f4}
+    .actions{margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    .btn{background:var(--brand);color:#fff;border:none;padding:.55rem .9rem;border-radius:12px;cursor:pointer;transition:background .2s, transform .04s}
+    .btn:hover{background:var(--brand-hover)} .btn:active{transform:translateY(1px)}
+    .btn.secondary{background:#fff;color:var(--brand-dark);border:1px solid #cbd5d6}
+    .btn.small{padding:.35rem .6rem;font-size:.82rem;border-radius:10px}
+    .btn.success{background:#16a34a}.btn.success:hover{background:#15803d}
+    .btn.danger{background:#ef4444}.btn.danger:hover{background:#dc2626}
+    .badge{background:var(--badge);padding:.35rem .7rem;border-radius:999px;font-size:.85rem;color:#111;border:1px solid #e5e7eb}
+    main{max-width:1100px;margin:0 auto;padding:1rem}
+    /* Toolbar */
+    .toolbar{background:#fff;border-bottom:1px solid var(--border)}
+    .toolbar .wrap{max-width:1100px;margin:0 auto;padding:1rem;display:grid;grid-template-columns:1.5fr 1fr auto;gap:.8rem;align-items:center}
+    .field label{display:block;font-weight:700;font-size:.85rem;color:#374151;margin-bottom:.25rem}
+    .field input,.field select{width:100%;padding:.65rem .8rem;border:1px solid #cbd5e1;border-radius:12px;font-size:.95rem}
+    .search{position:relative}
+    .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6}
+    .search input{padding-left:2.2rem}
+    /* Tabs */
+    .state-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:10px 0}
+    .tab{display:flex;align-items:center;gap:.45rem;background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:.4rem .75rem;cursor:pointer}
+    .tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .counter{background:#edf2f7;border-radius:999px;padding:.1rem .45rem;font-size:.75rem;color:#111}
+    .tab.active .counter{background:#fff}
+    /* Lista ordini */
+    .list{display:grid;gap:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .order{display:grid;grid-template-columns:1fr auto auto;gap:14px;padding:14px}
+    .order .title{font-weight:700}
+    .order .meta{font-size:.9rem;color:#475569}
+    .order .totale{text-align:right;font-variant-numeric:tabular-nums}
+    .tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.4rem}
+    .tag{display:inline-flex;align-items:center;gap:.35rem;background:#eef2f2;border:1px solid #dbe2e3;padding:.25rem .55rem;border-radius:999px;font-size:.8rem;color:#0b3b35}
+    .tag.warn{background:#fff7ed;border-color:#fed7aa}
+    .tag.ok{background:#ecfdf5;border-color:#bbf7d0}
+    .actions-row{display:flex;gap:.5rem;align-items:center;justify-content:flex-end}
+    .empty{padding:12px;margin-top:10px;background:#f3f4f6;border:1px dashed #d1d5db;border-radius:12px;color:#475569;text-align:center}
+    @media (max-width:900px){
+      .toolbar .wrap{grid-template-columns:1fr}
+      .order{grid-template-columns:1fr;align-items:start}
+      .order .totale{text-align:left}
+      .actions-row{justify-content:flex-start}
+    }
+    /* Toast */
+    #toast{position:fixed;bottom:16px;right:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;opacity:0;transform:translateY(8px);transition:.2s;z-index:100}
+    #toast.show{opacity:1;transform:none}
+  </style>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#00796b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+</head>
+<body>
+  <header class="app">
+    <div class="wrap">
+      <div class="logo">R</div>
+      <div>
+        <h1 class="title">Consegne – Fattorino</h1>
+        <p class="subtitle">Ordini confermati per consegna a domicilio</p>
+      </div>
+      <div class="actions">
+        <span id="driverBadge" class="badge">—</span>
+        <button id="logoutBtn" class="btn secondary">Esci</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toolbar + Tabs -->
+  <section class="toolbar">
+    <div class="wrap">
+      <div class="field search">
+        <label for="searchInput">Cerca</label>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M10 4a6 6 0 104.47 10.03l4.25 4.25 1.41-1.41-4.25-4.25A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z" fill="#64748b"/></svg>
+        <input id="searchInput" type="text" placeholder="Nome, telefono, indirizzo, ID..." />
+      </div>
+      <div class="field">
+        <label for="stateFilter">Filtro</label>
+        <select id="stateFilter">
+          <option value="accepted">Da prendere</option>
+          <option value="mine">In carico a me</option>
+          <option value="myorders">I miei ordini (storico)</option>
+          <option value="all">Tutti</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Azioni</label>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <button id="refreshBtn" class="btn small">Aggiorna</button>
+          <a class="btn small secondary" href="login_fattorino.html">Cambia utente</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <div class="state-tabs" id="stateTabs">
+      <button class="tab active" data-k="accepted">Da prendere <span class="counter" id="c-accepted">0</span></button>
+      <button class="tab" data-k="inDelivery">In consegna <span class="counter" id="c-inDelivery">0</span></button>
+      <button class="tab" data-k="completed">Completati <span class="counter" id="c-completed">0</span></button>
+    </div>
+
+    <section class="list" id="orders"></section>
+    <div id="empty" class="empty" style="display:none">Nessun ordine da mostrare</div>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    // ⬇️ CONFIG: inserisci i tuoi valori
+    const SUPABASE_URL = "https://svulhysmqimrkxlregyy.supabase.co"; // <- metti il tuo
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2dWxoeXNtcWltcmt4bHJlZ3l5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwNjYzNTUsImV4cCI6MjA3MTY0MjM1NX0.7AdMQITbKawLMLXUf2a4AnSGNNKB7lzel2fJ6-LzHYo";               // <- metti il tuo
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    
+
+    // Sessione fattorino
+    const SESSION_KEY='driverSession';
+
+    // Helpers DOM
+    const $  = (s)=> document.querySelector(s);
+    const $$ = (s)=> Array.from(document.querySelectorAll(s));
+    const toast = (m)=>{ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),1700); };
+
+    function getSession(){ try{ return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null'); }catch(e){ return null; } }
+    function clearSession(){ sessionStorage.removeItem(SESSION_KEY); }
+
+    // Guard
+    function guard(){
+      const s=getSession();
+      if(!s){ window.location.href='login_fattorino.html'; return null; }
+      $('#driverBadge').textContent = s.name + ' • ' + s.phone;
+      return s;
+    }
+
+    // Map IT/EN
+    function mapType(t){
+      const s = String(t||'').toLowerCase();
+      if (s === 'consegna') return 'delivery';
+      if (s === 'asporto')  return 'pickup';
+      return s;
+    }
+    function mapStatus(st){
+      const s = String(st||'').toLowerCase();
+      if (s === 'accettati')                  return 'accepted';
+      if (s === 'in consegna')                return 'out_for_delivery';
+      if (s === 'completati')                 return 'completed';
+      if (s === 'in attesa' || s === 'attesa')return 'pending';
+      return s;
+    }
+
+    function normalize(o){
+      const items = Array.isArray(o.items) ? o.items : [];
+      const type  = mapType(o.type);
+      const status= mapStatus(o.status);
+      const address = type==='delivery'
+        ? [o.address_line1, o.address_zip, o.address_city].filter(Boolean).join(', ')
+        : 'Ritiro al locale';
+      return {
+        id: String(o.id),
+        type, status,
+        customer: { name: o.customer_name || '', phone: o.customer_phone || '' },
+        address,
+        slot: o.slot_label || '-',
+        items,
+        total: Number(o.total)||0,
+        payment: (o.payment_method||'-'),
+        notes: o.notes||'',
+        courier_id: o.courier_id || null
+      };
+    }
+    const fmtEur = (n)=> new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n||0);
+
+    // Fetch ordini
+    async function fetchDeliveryOrders(view){
+      const s = getSession();
+      let q = supabase.from('orders').select('*').in('type', ['delivery','consegna']);
+
+      if (view === 'accepted')        q = q.or("status.eq.accepted,status.eq.Accettati");
+      else if (view === 'inDelivery') q = q.or("status.eq.out_for_delivery,status.eq.'In consegna'");
+      else if (view === 'completed')  q = q.or("status.eq.completed,status.eq.Completati");
+      else if (view === 'all')        q = q.in('status',['accepted','out_for_delivery','completed','Accettati','In consegna','Completati']);
+      else if (view === 'mine' || view === 'myorders') {
+        q = q.in('status',['out_for_delivery','completed','In consegna','Completati']);
+      }
+
+      const { data, error } = await q.order('placed_at', { ascending:false });
+      if (error) { console.error(error); toast('Errore caricamento: '+error.message); return []; }
+
+      let rows = (data||[]).map(normalize);
+
+      if (view === 'accepted')        rows = rows.filter(r=>r.status==='accepted');
+      else if (view === 'inDelivery') rows = rows.filter(r=>r.status==='out_for_delivery');
+      else if (view === 'completed')  rows = rows.filter(r=>r.status==='completed');
+      else if (view === 'mine')       rows = rows.filter(r=> r.status==='out_for_delivery' && r.courier_id && s && String(r.courier_id)===String(s.id));
+      else if (view === 'myorders')   rows = rows.filter(r=> ['out_for_delivery','completed'].includes(r.status) && r.courier_id && s && String(r.courier_id)===String(s.id));
+
+      return rows;
+    }
+
+    // Contatori
+    async function updateCounters(){
+      const [acc, ind, comp] = await Promise.all([
+        supabase.from('orders').select('id', { count: 'exact', head: true }).in('type',['delivery','consegna']).or("status.eq.accepted,status.eq.Accettati"),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).in('type',['delivery','consegna']).or("status.eq.out_for_delivery,status.eq.'In consegna'"),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).in('type',['delivery','consegna']).or("status.eq.completed,status.eq.Completati"),
+      ]);
+      $('#c-accepted').textContent    = acc.count    ?? 0;
+      $('#c-inDelivery').textContent  = ind.count    ?? 0;
+      $('#c-completed').textContent   = comp.count   ?? 0;
+    }
+
+    // RPC azioni
+   async function take(orderId){
+  const s = getSession(); if(!s){ window.location.href='login_fattorino.html'; return; }
+  const { data, error } = await supabase.rpc('orders_take', {
+    _order_id: orderId,    // UUID dell'ordine
+    _phone: s.phone,       // dal driverSession
+    _pin: s.pin            // dal driverSession
+  });
+  if (error) { toast('Errore presa in carico: ' + error.message); return; }
+  if (!data) { toast('Ordine non disponibile o già preso'); return; }
+  toast('Ordine preso in carico'); render();
+}
+
+
+  async function complete(orderId){
+  const s = getSession(); if(!s){ window.location.href='login_fattorino.html'; return; }
+  const { data, error } = await supabase.rpc('orders_complete', {
+    _order_id: orderId,
+    _phone: s.phone,
+    _pin: s.pin
+  });
+  if (error) { toast('Errore completamento: ' + error.message); return; }
+  if (!data) { toast('Non sei assegnato o stato non valido'); return; }
+  toast('Consegna completata'); render();
+}
+
+
+    // Render
+    async function render(){
+      const sess = guard(); if(!sess) return;
+
+      const activeBtn = $$('#stateTabs .tab').find(x => x.classList.contains('active'));
+      const activeTab = activeBtn?.dataset.k || 'accepted';
+      if(activeTab==='accepted') $('#stateFilter').value='accepted';
+      else if(activeTab==='inDelivery') $('#stateFilter').value='mine';
+      else if(activeTab==='completed') $('#stateFilter').value='myorders';
+
+      await updateCounters();
+
+      const view = $('#stateFilter').value;
+      const term = $('#searchInput').value.trim().toLowerCase();
+
+      const rows = await fetchDeliveryOrders(view);
+
+      const filtered = rows.filter(o => {
+        if (!term) return true;
+        return [o.id, o.customer.name, o.customer.phone, o.address].join(' ').toLowerCase().includes(term);
+      });
+
+      const wrap = $('#orders'); wrap.innerHTML='';
+      $('#empty').style.display = filtered.length ? 'none' : 'block';
+      if (!filtered.length) return;
+
+      filtered.forEach(o=>{
+        const isMine = o.courier_id && String(o.courier_id) === String(sess.id);
+        const assignedToOther = o.courier_id && !isMine;
+
+        const el=document.createElement('article'); el.className='card order';
+        el.innerHTML=`
+          <div>
+            <div class="title">#${o.id.slice(-4)} • ${o.customer.name||'—'}</div>
+            <div class="meta">${o.address || '<em>Indirizzo mancante</em>'}</div>
+            <div class="meta">Tel: ${o.customer.phone||'—'} • Slot: <span class="tag">${o.slot}</span></div>
+            ${o.notes ? `<div class="meta">Note: ${o.notes}</div>` : ''}
+            <div class="tags">
+              <a class="btn small secondary" href="https://maps.google.com/?q=${encodeURIComponent(o.address||'')}" target="_blank" rel="noopener">Apri in Mappe</a>
+            </div>
+          </div>
+          <div class="totale">
+            Totale: <strong>${fmtEur(o.total)}</strong>
+            <div class="meta">Pagamento: ${String(o.payment||'-').toUpperCase()}</div>
+            <div class="tags">
+              <span class="tag ${o.status==='out_for_delivery'?'ok':'warn'}">${o.status==='out_for_delivery'?'In consegna':'Da prendere'}</span>
+              ${o.courier_id ? `<span class="tag">Assegnato</span>` : ''}
+            </div>
+          </div>
+          <div class="actions-row">
+            ${
+              assignedToOther
+              ? '<button class="btn small secondary" disabled>Assegnato</button>'
+              : (o.status==='out_for_delivery' && isMine)
+                ? '<button class="btn small success" data-act="complete">Completa</button>'
+                : (o.status==='accepted' && !o.courier_id)
+                  ? '<button class="btn small" data-act="take">Prendi in carico</button>'
+                  : '<button class="btn small secondary" disabled>—</button>'
+            }
+          </div>`;
+        el.querySelector('[data-act="take"]')?.addEventListener('click', ()=> take(o.id));
+        el.querySelector('[data-act="complete"]')?.addEventListener('click', ()=> complete(o.id));
+        wrap.appendChild(el);
+      });
+    }
+
+    // Realtime (delivery only)
+    let ch;
+    function ensureRealtime(){
+      if (ch) return;
+      ch = supabase.channel('orders-delivery-rt')
+        .on('postgres_changes', { event:'*', schema:'public', table:'orders', filter:"type=in.(delivery,consegna)" }, ()=> render())
+        .subscribe();
+    }
+
+    // Bind UI
+    $('#logoutBtn').addEventListener('click', ()=>{ clearSession(); window.location.href='login_fattorino.html'; });
+    $('#refreshBtn').addEventListener('click', render);
+    $('#stateFilter').addEventListener('change', render);
+    $('#searchInput').addEventListener('input', render);
+    $$('#stateTabs .tab').forEach(b=> b.addEventListener('click', ()=>{
+      $$('#stateTabs .tab').forEach(x=> x.classList.toggle('active', x===b));
+      if(b.dataset.k==='accepted')   $('#stateFilter').value='accepted';
+      if(b.dataset.k==='inDelivery') $('#stateFilter').value='mine';
+      if(b.dataset.k==='completed')  $('#stateFilter').value='myorders';
+      render();
+    }));
+
+    // Avvio
+    (async ()=>{
+      if (!guard()) return;
+      await render();
+      ensureRealtime();
+      setInterval(render, 8000);
+    })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+      });
+      // iOS install hint (optional): nothing to do; iOS uses "Add to Home Screen".
+    }
+  </script>
+
+</body>
+</html>
